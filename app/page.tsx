@@ -1,40 +1,25 @@
-"use client";
-
-import { handleSignIn, handleSignOut } from "./lib/auth";
-import { SessionProvider, useSession } from "next-auth/react";
-
+import { neon } from "@neondatabase/serverless";
+import Login from "./components/Login";
 export default function App() {
-  return (
-    <SessionProvider>
-      <Home />
-    </SessionProvider>
-  );
-}
 
-function Home() {
-  const { data: session } = useSession();
+
+  async function create(formData: FormData) {
+    'use server';
+    // Connect to the Neon database
+    const sql = neon(`${process.env.DATABASE_URL}`);
+    const comment = formData.get('comment');
+    // Insert the comment from the form into the Postgres database
+    await sql`INSERT INTO streabit_comments (comment) VALUES (${comment})`;
+  }
+
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gray-100">
-      {session ? (
-        <div>
-          <h2 className="text-lg font-medium text-gray-700">
-            Welcome, {session?.user?.name}!
-          </h2>
-          <button
-            onClick={handleSignOut}
-            className="px-4 py-2 mt-4 text-white bg-red-500 rounded-lg hover:bg-red-600"
-          >
-            Sign Out
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={handleSignIn}
-          className="px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-        >
-          Sign in with Google
-        </button>
-      )}
+    <main className="flex items-center justify-center min-h-screen bg-gray-100 flex-col">
+      <Login />
+      <br />
+      <form action={create}>
+        <input className="border-2 border-gray-300 rounded-md p-2 text-black" type="text" placeholder="write a comment" name="comment" />
+        <button className="bg-blue-500 text-black p-2 rounded-md" type="submit">Submit</button>
+      </form>
     </main>
   );
 }
